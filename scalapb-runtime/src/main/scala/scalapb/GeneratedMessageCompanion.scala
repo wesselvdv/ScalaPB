@@ -69,6 +69,11 @@ trait GeneratedOneof extends Any with Product with Serializable {
 
 trait GeneratedOneofCompanion
 
+trait GeneratedDynamic extends Any {
+  def updateDynamic(name: String)(value: Any): Unit
+  def clearDynamic(name: String): Unit
+}
+
 trait GeneratedMessage extends Any with Product with Serializable {
 
   /** Serializes the message into the given coded output stream */

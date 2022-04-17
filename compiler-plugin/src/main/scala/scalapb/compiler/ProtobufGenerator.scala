@@ -1331,10 +1331,20 @@ class ProtobufGenerator(
       .indent
       .indent
       .call(printConstructorFieldList(message))
-      .add(s") extends ${message.baseClasses.mkString(" with ")} {")
+      .add(s") extends ${message.baseClasses.mkString(" with ")} with scalapb.GeneratedDynamic {")
       .call(generateSerializedSizeForPackedFields(message))
       .call(generateSerializedSize(message))
       .call(generateWriteTo(message))
+      .add(
+        s"""def clearDynamic(__name: java.lang.String): Unit = __name match {
+          ${message.fields.filterNot(_.isInOneof).map((field) => s"""case "${field.scalaName}" => ${field.scalaName.asSymbol} = ${defaultValueForDefaultInstance(field)}""").mkString("\n")}
+          case _ => sys.error("Unable to clear unknown property: " + __name)
+        }
+           |def updateDynamic(__name: java.lang.String)(__v: Any): Unit = __name match {
+          ${message.fields.filterNot(_.isInOneof).map((field) => s"""case "${field.scalaName}" => ${field.scalaName.asSymbol} = __v.asInstanceOf[${field.scalaTypeName}]""").mkString("\n")}
+          case _ => sys.error("Unable to update unknown property: " + __name)
+        }""".stripMargin
+      )
       .print(message.fields) { case (printer, field) =>
         val withMethod  = "with" + field.upperScalaName
         val clearMethod = "clear" + field.upperScalaName
